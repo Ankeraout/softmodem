@@ -1,0 +1,13 @@
+{
+    "modem": {
+        "record": true,
+        "enable_v21": true,
+        "enable_v22": true
+    },
+    "sip": {
+        "server": "sip.mysipprovider.com",
+        "port": 5060,
+        "user": "username",
+        "password": "passw0rd"
+    }
+}
