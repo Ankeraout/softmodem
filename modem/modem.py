@@ -3,7 +3,7 @@ import modem.analog_protocols.v21
 import modem.analog_protocols.v22
 import modem.analog_protocols.v8
 import modem.bit_protocols.uart
-import modem.codec.pcm8
+import modem.codec.pcm16
 import modem
 import pathlib
 import threading
@@ -25,7 +25,7 @@ class Modem(modem.IModem):
         self._rx_call_thread: threading.Thread | None = None
         self._tx_call_thread: threading.Thread | None = None
         self._record = record
-        self._codec = modem.codec.pcm8.PCM8()
+        self._codec = modem.codec.pcm16.PCM16()
         self._enable_v21 = enable_v21
         self._enable_v22 = enable_v22
 
@@ -145,11 +145,11 @@ class Modem(modem.IModem):
         self._wave_rx = wave.open(record_file_name + "-rx.wav", "wb")
         self._wave_rx.setframerate(8000)
         self._wave_rx.setnchannels(1)
-        self._wave_rx.setsampwidth(1)
+        self._wave_rx.setsampwidth(2)
         self._wave_tx = wave.open(record_file_name + "-tx.wav", "wb")
         self._wave_tx.setframerate(8000)
         self._wave_tx.setnchannels(1)
-        self._wave_tx.setsampwidth(1)
+        self._wave_tx.setsampwidth(2)
 
         self._tx_call_thread = threading.Thread(
             target=self._call_tx_thread_main
