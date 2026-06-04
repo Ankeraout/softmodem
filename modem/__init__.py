@@ -74,7 +74,11 @@ class CallState(enum.Enum):
 
 class ICall(abc.ABC):
     @abc.abstractmethod
-    def read_audio(self, n: int) -> list[float]:
+    def read_audio(
+        self,
+        n: int,
+        timeout: typing.Optional[float] = None
+    ) -> list[float]:
         pass
 
     @abc.abstractmethod

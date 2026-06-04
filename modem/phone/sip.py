@@ -2,14 +2,19 @@ import modem
 import modem.codec.pcm8u
 import sip.client
 import time
+import typing
 
 class SIPCall(modem.ICall):
     def __init__(self, call: sip.client.SIPCall) -> None:
         self._call = call
         self._codec = modem.codec.pcm8u.PCM8U()
 
-    def read_audio(self, n: int) -> list[float]:
-        return self._codec.decode(self._call.read_audio(n))
+    def read_audio(
+        self,
+        n: int,
+        timeout: typing.Optional[float] = None
+    ) -> list[float]:
+        return self._codec.decode(self._call.read_audio(n, timeout))
 
     def write_audio(self, data: list[float]) -> None:
         self._call.write_audio(self._codec.encode(data))
@@ -19,13 +24,13 @@ class SIPCall(modem.ICall):
 
     def get_state(self) -> modem.CallState:
         match self._call.state:
-            case sip.client.SIPCall.State.CALLING:
+            case sip.client.SIPCallState.DIALING:
                 return modem.CallState.DIALING
             
-            case sip.client.SIPCall.State.RINGING:
+            case sip.client.SIPCallState.RINGING:
                 return modem.CallState.RINGING
             
-            case sip.client.SIPCall.State.CONNECTED:
+            case sip.client.SIPCallState.CONNECTED:
                 return modem.CallState.ANSWERED
             
             case _:
@@ -48,13 +53,13 @@ class SIPPhone(modem.IPhone):
         )
         self._client.start()
 
-        while self._client.status in (
-            sip.client.SIPStatus.STARTING,
-            sip.client.SIPStatus.REGISTERING
+        while self._client.state in (
+            sip.client.SIPClientState.STARTING,
+            sip.client.SIPClientState.REGISTERING
         ):
             time.sleep(0.1)
 
-        if self._client.status != sip.client.SIPStatus.REGISTERED:
+        if self._client.state != sip.client.SIPClientState.REGISTERED:
             raise Exception("Failed to register.")
     
     def call(self, number: str) -> SIPCall:

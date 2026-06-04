@@ -163,7 +163,10 @@ class Modem(modem.IModem):
                 calling = False
 
             else:
-                samples_rx = self._call.read_audio(160)
+                samples_rx = self._call.read_audio(160, 0.1)
+
+                if len(samples_rx) == 0:
+                    continue
 
                 if self._record:
                     self._wave_rx.writeframes(self._codec.encode(samples_rx))

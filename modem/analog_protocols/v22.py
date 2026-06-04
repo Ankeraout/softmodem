@@ -94,7 +94,12 @@ class V22Receiver(modem.IAnalogReceiver):
         self._unscrambler = V22Receiver._Unscrambler()
         self.enable_transition_counter: bool = True
         self._transition_counter = self._TransitionCounter(int(1200 * 0.27))
-        self._costas = modem.util.costas.Costas(0.03, 0.0005, 40)
+        self._costas = modem.util.costas.Costas(
+            modem.util.costas.Costas.slicer_qpsk,
+            0.03,
+            0.0005,
+            40
+        )
         self._agc = modem.util.agc.AGC()
 
     def get_transition_rate(self) -> float:

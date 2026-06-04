@@ -5,6 +5,7 @@ class TCPServer(modem.IByteReceiver):
     def __init__(self, address: str, port: int, byte_sender: modem.IByteSender | None = None) -> None:
         self._byte_sender = byte_sender
         self._server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM, socket.IPPROTO_TCP)
+        self._server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self._server_socket.bind((address, port))
         self._server_socket.listen()
         self._client_socket: socket.socket | None = None
