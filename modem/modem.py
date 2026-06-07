@@ -155,25 +155,19 @@ class Modem(modem.IModem):
             target=self._call_tx_thread_main
         )
         self._tx_call_thread.start()
-        
-        calling = True
 
-        while calling:
-            if call.get_state() == modem.CallState.ENDED:
-                calling = False
+        while call.get_state() == modem.CallState.ANSWERED:
+            samples_rx = call.read_audio(160, 0.1)
 
-            else:
-                samples_rx = self._call.read_audio(160, 0.1)
+            if len(samples_rx) == 0:
+                continue
 
-                if len(samples_rx) == 0:
-                    continue
+            if self._record:
+                self._wave_rx.writeframes(self._codec.encode(samples_rx))
 
-                if self._record:
-                    self._wave_rx.writeframes(self._codec.encode(samples_rx))
-
-                with self._lock:
-                    if self._analog_protocol is not None:
-                        self._analog_protocol.receive_samples(samples_rx)
+            with self._lock:
+                if self._analog_protocol is not None:
+                    self._analog_protocol.receive_samples(samples_rx)
         
         print("[analog-rx] Call ended.")
         self._rx_call_thread = None
