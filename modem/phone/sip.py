@@ -1,5 +1,6 @@
 import modem
 import modem.codec.pcm8u
+import random
 import sip.client
 import time
 import typing
@@ -49,7 +50,8 @@ class SIPPhone(modem.IPhone):
             username,
             password,
             host,
-            server_port=port
+            server_port=port,
+            rtp_port_start=random.randint(10000, 18000) & ~1
         )
         self._client.start()
 

@@ -247,22 +247,21 @@ class V22bisSender(modem.IAnalogProvider):
 
                 self._quadrant_phase %= 2 * cmath.pi
 
-                if self._speed == 2400:
-                    match bits[2:4]:
-                        case [0, 0]:
-                            symbol = complex(2 ** 0.5 / 6, 2 ** 0.5 / 6)
+                if self._speed == 1200:
+                    bits += [0, 1]
 
-                        case [0, 1]:
-                            symbol = complex(2 ** 0.5 / 2, 2 ** 0.5 / 6)
+                match bits[2:4]:
+                    case [0, 0]:
+                        symbol = complex(2 ** 0.5 / 6, 2 ** 0.5 / 6)
 
-                        case [1, 0]:
-                            symbol = complex(2 ** 0.5 / 6, 2 ** 0.5 / 2)
+                    case [0, 1]:
+                        symbol = complex(2 ** 0.5 / 2, 2 ** 0.5 / 6)
 
-                        case [1, 1]:
-                            symbol = complex(2 ** 0.5 / 2, 2 ** 0.5 / 2)
-                    
-                else:
-                    symbol = complex(2 ** 0.5 / 2, 2 ** 0.5 / 2)
+                    case [1, 0]:
+                        symbol = complex(2 ** 0.5 / 6, 2 ** 0.5 / 2)
+
+                    case [1, 1]:
+                        symbol = complex(2 ** 0.5 / 2, 2 ** 0.5 / 2)
 
                 symbol *= cmath.exp(complex(imag=self._quadrant_phase))
                 buffer.append(symbol)
@@ -525,6 +524,9 @@ class V22bis(modem.IAnalogProtocol):
 
                     self._change_state(V22bis._State.DATA)
 
+            case V22bis._State.DATA:
+                self._receiver.receive_samples(samples)
+
             case V22bis._State.CALLEE_SENDING_UNSCRAMBLED_1:
                 pass
     
@@ -590,6 +592,7 @@ class V22bis(modem.IAnalogProtocol):
                 self._receiver.bit_receiver = self._handshake_bit_receiver
                 self._receiver.enable_transition_counter = True
                 self._sender.bit_provider = self._pattern_provider_1
+                self._sender._scrambler._state = [1, 1, 0, 0, 0, 0, 1, 0, 0, 0, 1, 1, 1, 0, 1, 0, 1]
 
             case V22bis._State.CALLER_WAITING_SCRAMBLED_1_2400:
                 self._receiver.bit_receiver = self._handshake_bit_receiver

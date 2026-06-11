@@ -1,6 +1,7 @@
 import datetime
 import modem.analog_protocols.v21
 import modem.analog_protocols.v22
+import modem.analog_protocols.v22bis
 import modem.analog_protocols.v8
 import modem.bit_protocols.uart
 import modem.codec.pcm16
@@ -87,7 +88,7 @@ class Modem(modem.IModem):
         print(configuration)
 
         if configuration.v22_enabled:
-            self._analog_protocol = modem.analog_protocols.v22.V22(
+            self._analog_protocol = modem.analog_protocols.v22bis.V22bis(
                 self._bit_protocol,
                 modem.Role.CALLER,
                 self._call_connected
