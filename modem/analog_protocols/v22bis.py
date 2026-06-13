@@ -7,9 +7,8 @@ import modem.util.costas
 import modem.util.gardner
 import modem.util.goertzel
 import modem.util.rrc
-import modem.util.tone
+import modem.util.slice
 import scipy.signal
-import threading
 import typing
 
 SAMPLE_RATE_EXTERNAL = 8000
@@ -63,6 +62,7 @@ class V22bisReceiver(modem.IAnalogReceiver):
         self._phase_advance *= 2400 if role == modem.Role.CALLER else 1200
         self._gardner = modem.util.gardner.Gardner(
             INTERNAL_SAMPLES_PER_SYMBOL,
+            modem.util.slice.slicer_qam16,
             0.1,
             0.00001
         )
@@ -73,13 +73,12 @@ class V22bisReceiver(modem.IAnalogReceiver):
         self.enable_transition_counter: bool = True
         self._transition_counter = self._TransitionCounter(int(2400 * 0.27))
         self._costas = modem.util.costas.Costas(
-            modem.util.costas.Costas.slicer_qam16,
+            modem.util.slice.slicer_qam16,
             0.1,
             0.0001,
             40
         )
-        self._agc = modem.util.agc.AGC(0.0001)
-        self._symbols = []
+        self._agc = modem.util.agc.AGC(0.0001, modem.util.slice.slicer_qpsk)
         self._speed = 1200
 
     @property

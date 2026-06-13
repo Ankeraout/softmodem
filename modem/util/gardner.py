@@ -1,6 +1,6 @@
-import collections
 import math
 import modem
+import typing
 
 class NoGardner(modem.IAnalogReceiver):
     def __init__(self, samples_per_symbol: int, offset: int) -> None:
@@ -25,10 +25,12 @@ class Gardner:
     def __init__(
         self,
         samples_per_symbol: float,
-        gain_mu: float = 0.01,
-        gain_omega: float = 0.0001
+        slicer: typing.Callable[[complex], complex],
+        gain_mu: float,
+        gain_omega: float
     ) -> None:
         self._samples_per_symbol = samples_per_symbol
+        self._slicer = slicer
         self._omega = samples_per_symbol
         self._mu = 0
 
@@ -39,10 +41,6 @@ class Gardner:
 
         self._previous_sample = 0
         self._previous_decision = 0
-
-    @staticmethod
-    def slice(z: complex) -> int:
-        return complex(1 if z.real >= 0 else -1, 1 if z.imag >= 0 else -1)
 
     @staticmethod
     def interpolate(x0: complex, x1: complex, mu: float) -> complex:
@@ -64,7 +62,7 @@ class Gardner:
                 frac
             )
 
-            decision = self.slice(sample)
+            decision = self._slicer(sample)
 
             error = (
                 self._previous_decision.conjugate() * sample
