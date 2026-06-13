@@ -3,6 +3,7 @@ import enum
 import modem
 import modem.analog_protocols.v22
 import modem.util.agc
+import modem.util.bit_pattern
 import modem.util.costas
 import modem.util.gardner
 import modem.util.goertzel
@@ -21,23 +22,6 @@ INTERNAL_SAMPLES_PER_SYMBOL = SAMPLE_RATE_INTERNAL // SYMBOL_RATE
 
 class V22bisReceiver(modem.IAnalogReceiver):
     _Unscrambler = modem.analog_protocols.v22.V22Receiver._Unscrambler
-        
-    class _TransitionCounter(modem.IBitReceiver):
-        def __init__(self, n: int) -> None:
-            self._state = [0] * n
-            self._write_index = 0
-
-        def receive_bits(self, bits: list[int]) -> None:
-            for bit in bits:
-                self._state[self._write_index] = bit
-                self._write_index += 1
-                self._write_index %= len(self._state)
-
-        def get_transition_count(self) -> int:
-            return sum(
-                self._state[i] != self._state[i + 1]
-                for i in range(len(self._state) - 1)
-            )
 
     def __init__(
         self,
@@ -71,7 +55,9 @@ class V22bisReceiver(modem.IAnalogReceiver):
         self.enable_unscrambler: bool = True
         self._unscrambler = V22bisReceiver._Unscrambler()
         self.enable_transition_counter: bool = True
-        self._transition_counter = self._TransitionCounter(int(2400 * 0.27))
+        self._transition_counter = modem.util.bit_pattern.TransitionCounter(
+            int(2400 * 0.27)
+        )
         self._costas = modem.util.costas.Costas(
             modem.util.slice.slicer_qam16,
             0.1,
