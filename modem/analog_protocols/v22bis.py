@@ -292,35 +292,6 @@ class V22bis(modem.IAnalogProtocol):
         CALLER_WAITING_SCRAMBLED_1_2400 = enum.auto()
         CALLEE_SENDING_UNSCRAMBLED_1 = enum.auto()
         DATA = enum.auto()
-        
-    class _PatternBitProvider(modem.IBitProvider):
-        def __init__(self, pattern: list[int], enable_scrambler: bool = False) -> None:
-            self._scrambler = V22bisSender._Scrambler()
-            self.enable_scrambler = enable_scrambler
-            self._pattern = pattern
-            self._index = 0
-
-        def get_bits(self, n: int) -> list[int]:
-            bits = []
-
-            for _ in range(n):
-                bits.append(self._pattern[self._index])
-                self._index += 1
-                self._index %= len(self._pattern)
-
-            if self.enable_scrambler:
-                bits = self._scrambler.scramble(bits)
-            
-            return bits
-        
-        @property
-        def pattern(self) -> list[int]:
-            return self._pattern
-        
-        @pattern.setter
-        def pattern(self, pattern: list[int]) -> None:
-            self._pattern = pattern
-            self._index = 0
 
     class _PatternBitReceiver(modem.IBitReceiver):
         def __init__(
@@ -397,8 +368,12 @@ class V22bis(modem.IAnalogProtocol):
         self._phase: float = 0
         self._pattern_receiver_0011 = V22bis._PatternBitReceiver([0, 0, 1, 1])
         self._pattern_receiver_1 = V22bis._PatternBitReceiver([1], True)
-        self._pattern_provider_0011 = V22bis._PatternBitProvider([0, 0, 1, 1])
-        self._pattern_provider_1 = V22bis._PatternBitProvider([1], True)
+        self._pattern_provider_0011 = modem.util.bit_pattern.PatternBitProvider(
+            [0, 0, 1, 1]
+        )
+        self._pattern_provider_1 = modem.util.bit_pattern.PatternBitProvider(
+            [1]
+        )
         self._handshake_bit_receiver = V22bis._HandshakeBitReceiver(
             [
                 self._pattern_receiver_0011,
