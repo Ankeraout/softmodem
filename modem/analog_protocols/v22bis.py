@@ -336,14 +336,6 @@ class V22bis(modem.IAnalogProtocol):
             self._best = 0
             self._index = 0
         
-    class _HandshakeBitReceiver(modem.IBitReceiver):
-        def __init__(self, receivers: list[modem.IBitReceiver]) -> None:
-            self._receivers = receivers
-        
-        def receive_bits(self, bits: list[int]) -> None:
-            for receiver in self._receivers:
-                receiver.receive_bits(bits)
-        
     def __init__(
         self,
         bit_protocol: modem.IBitProtocol,
@@ -374,7 +366,7 @@ class V22bis(modem.IAnalogProtocol):
         self._pattern_provider_1 = modem.util.bit_pattern.PatternBitProvider(
             [1]
         )
-        self._handshake_bit_receiver = V22bis._HandshakeBitReceiver(
+        self._handshake_bit_receiver = modem.util.bit_pattern.BitReceiverSplitter(
             [
                 self._pattern_receiver_0011,
                 self._pattern_receiver_1
