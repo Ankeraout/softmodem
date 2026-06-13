@@ -30,7 +30,7 @@ class Gardner:
         gain_omega: float
     ) -> None:
         self._samples_per_symbol = samples_per_symbol
-        self._slicer = slicer
+        self.slicer = slicer
         self._omega = samples_per_symbol
         self._mu = 0
 
@@ -62,7 +62,7 @@ class Gardner:
                 frac
             )
 
-            decision = self._slicer(sample)
+            decision = self.slicer(sample)
 
             error = (
                 self._previous_decision.conjugate() * sample

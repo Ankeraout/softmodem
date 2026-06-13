@@ -64,7 +64,7 @@ class V22bisReceiver(modem.IAnalogReceiver):
             0.0001,
             40
         )
-        self._agc = modem.util.agc.AGC(0.0001, modem.util.slice.slicer_qpsk)
+        self._agc = modem.util.agc.AGC(0.0001)
         self.speed = 2400
 
     @property
@@ -76,10 +76,12 @@ class V22bisReceiver(modem.IAnalogReceiver):
         if value not in (1200, 2400):
             raise ValueError("Invalid bitrate value.")
 
-        self._costas.slicer = (
+        slicer = (
             modem.util.slice.slicer_qam16 if value == 2400
-            else modem.util.slice.slicer_qpsk
+            else modem.util.slice.slicer_qpsk_v22bis
         )
+        self._costas.slicer = slicer
+        self._gardner.slicer = slicer
         self._speed = value
 
     def get_transition_rate(self) -> float:
@@ -429,6 +431,8 @@ class V22bis(modem.IAnalogProtocol):
                     self._timer = 0.765
 
             case V22bis._State.CALLER_UNSCRAMBLED_0011_DETECTED:
+                self._receiver.receive_samples(samples)
+
                 if self._timer <= 0:
                     print("[V22bis] Ready to receive at 2400 bps.")
                     self._change_state(V22bis._State.CALLER_RECEIVE_2400)
@@ -531,6 +535,10 @@ class V22bis(modem.IAnalogProtocol):
                 self._pattern_receiver_1.reset()
             
             case V22bis._State.CALLER_UNSCRAMBLED_0011_DETECTED:
+                self._receiver.bit_receiver = self._handshake_bit_receiver
+                self._receiver.enable_transition_counter = True
+                self._receiver.enable_unscrambler = False
+                self._receiver.speed = 1200
                 self._sender.bit_provider = self._pattern_provider_1
                 self._sender._speed = 1200
 
