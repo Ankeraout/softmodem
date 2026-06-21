@@ -6,7 +6,7 @@ SYMBOLS_PER_SECOND = 300
 SYMBOL_FREQUENCIES = {
     softmodem.DataDirection.RX: {
         softmodem.CallDirection.OUTGOING: [2025, 2225],
-        softmodem.CallDirection.INCOMING: [1070, 1270],
+        softmodem.CallDirection.INCOMING: [1070, 1270]
     },
     softmodem.DataDirection.TX: {
         softmodem.CallDirection.OUTGOING: [1070, 1270],
