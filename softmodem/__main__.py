@@ -130,9 +130,18 @@ class Application:
 
         return 0
 
-    def _client_thread_main(self, client_socket: socket.socket) -> None:
+    def _client_thread_main(
+        self,
+        client_socket: socket.socket
+    ) -> None:
         byte_receiver = softmodem.util.socket.SocketByteReceiver(client_socket)
-        modem = softmodem.modem.Modem(self._phone, byte_receiver)
+        modem = softmodem.modem.Modem(
+            self._phone,
+            byte_receiver,
+            self._configuration.record,
+            self._configuration.enable_v21,
+            self._configuration.enable_v22
+        )
 
         while not self._stop_request:
             try:

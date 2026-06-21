@@ -2,6 +2,10 @@ import abc
 import dataclasses
 import enum
 
+class DataDirection(enum.Enum):
+    RX = enum.auto()
+    TX = enum.auto()
+
 class IAnalogProvider(abc.ABC):
     @abc.abstractmethod
     def get_samples(self, n: int) -> list[float]:
@@ -80,7 +84,7 @@ class ICall(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def read_samples(self, timeout: float | None = None) -> list[float]:
+    def read_samples(self, n: int, timeout: float | None = None) -> list[float]:
         pass
 
     @abc.abstractmethod
