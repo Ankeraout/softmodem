@@ -2,6 +2,8 @@ import datetime
 import softmodem
 import softmodem.codec.pcm16
 import softmodem.protocol.analog.bell103
+import softmodem.protocol.analog.v21
+import softmodem.protocol.analog.v8
 import softmodem.protocol.bit.uart
 import softmodem.protocol.byte.v250
 import threading
@@ -75,11 +77,11 @@ class Modem(softmodem.IModem, softmodem.IByteSender):
                 record_file_name = datetime.datetime.now().strftime(
                     "record/%Y%m%d%H%M%S_"
                 )
-                self._wave_rx = wave.open(record_file_name + "_rx.wav", "wb")
+                self._wave_rx = wave.open(record_file_name + "rx.wav", "wb")
                 self._wave_rx.setframerate(8000)
                 self._wave_rx.setnchannels(1)
                 self._wave_rx.setsampwidth(2)
-                self._wave_tx = wave.open(record_file_name + "_tx.wav", "wb")
+                self._wave_tx = wave.open(record_file_name + "tx.wav", "wb")
                 self._wave_tx.setframerate(8000)
                 self._wave_tx.setnchannels(1)
                 self._wave_tx.setsampwidth(2)
@@ -122,11 +124,16 @@ class Modem(softmodem.IModem, softmodem.IByteSender):
             
             time.sleep(0.1)
 
+        configuration = softmodem.protocol.analog.v8.Configuration(
+            self._enable_v21,
+            self._enable_v22
+        )
+
         self._data_session.analog_protocol = (
-            softmodem.protocol.analog.bell103.Bell103(
-                self._data_session.bit_protocol,
+            softmodem.protocol.analog.v8.V8(
                 call.direction,
-                self._connect_callback
+                configuration,
+                self._connect_callback_v8
             )
         )
         
@@ -181,7 +188,32 @@ class Modem(softmodem.IModem, softmodem.IByteSender):
 
         print("[RX thread] Call ended.")
 
-    def _connect_callback(self, downlink_speed: int, uplink_speed: int) -> None:
+    def _connect_callback_v8(
+        self,
+        configuration: softmodem.protocol.analog.v8.Configuration
+    ) -> None:
+        print("[Modem] Received V.8 configuration: ", str(configuration))
+
+        with self._lock:
+            call = self._call
+
+            if call is None:
+                return
+
+        if configuration.v21_enabled:
+            self._data_session.analog_protocol = (
+                softmodem.protocol.analog.v21.V21(
+                    self._data_session.bit_protocol,
+                    call.direction,
+                    self._connect_callback
+                )
+            )
+
+    def _connect_callback(
+        self,
+        downlink_speed: int,
+        uplink_speed: int
+    ) -> None:
         self._byte_receiver.receive_bytes(
             "CONNECT {:d}/{:d}\r\n".format(
                 downlink_speed,

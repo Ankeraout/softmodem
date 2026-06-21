@@ -5,16 +5,16 @@ SAMPLES_PER_SECOND = 8000
 SYMBOLS_PER_SECOND = 300
 SYMBOL_FREQUENCIES = {
     softmodem.DataDirection.RX: {
-        softmodem.CallDirection.OUTGOING: [2025, 2225],
-        softmodem.CallDirection.INCOMING: [1070, 1270],
+        softmodem.CallDirection.OUTGOING: [1850, 1650],
+        softmodem.CallDirection.INCOMING: [1180, 980],
     },
     softmodem.DataDirection.TX: {
-        softmodem.CallDirection.OUTGOING: [1070, 1270],
-        softmodem.CallDirection.INCOMING: [2025, 2225]
+        softmodem.CallDirection.OUTGOING: [1180, 980],
+        softmodem.CallDirection.INCOMING: [1850, 1650]
     }
 }
 
-class Bell103Receiver(softmodem.protocol.analog.fsk.FSKReceiver):
+class V21Receiver(softmodem.protocol.analog.fsk.FSKReceiver):
     def __init__(
         self,
         bit_receiver: softmodem.IBitReceiver,
@@ -28,7 +28,7 @@ class Bell103Receiver(softmodem.protocol.analog.fsk.FSKReceiver):
             SYMBOLS_PER_SECOND
         )
 
-class Bell103Sender(softmodem.protocol.analog.fsk.FSKSender):
+class V21Sender(softmodem.protocol.analog.fsk.FSKSender):
     def __init__(
         self,
         bit_provider: softmodem.IBitProvider,
@@ -42,15 +42,15 @@ class Bell103Sender(softmodem.protocol.analog.fsk.FSKSender):
             SYMBOLS_PER_SECOND
         )
 
-class Bell103(softmodem.IAnalogProtocol):
+class V21(softmodem.IAnalogProtocol):
     def __init__(
         self,
         bit_protocol: softmodem.IBitProtocol,
         call_direction: softmodem.CallDirection,
         connect_callback: typing.Callable[[int, int], None] | None = None
     ) -> None:
-        self._analog_receiver = Bell103Receiver(bit_protocol, call_direction)
-        self._analog_sender = Bell103Sender(bit_protocol, call_direction)
+        self._analog_receiver = V21Receiver(bit_protocol, call_direction)
+        self._analog_sender = V21Sender(bit_protocol, call_direction)
         self._connect_sent = False
         self._connect_callback = connect_callback
 
