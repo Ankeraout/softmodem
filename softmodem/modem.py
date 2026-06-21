@@ -3,6 +3,7 @@ import softmodem
 import softmodem.codec.pcm16
 import softmodem.protocol.analog.bell103
 import softmodem.protocol.analog.v21
+import softmodem.protocol.analog.v22bis
 import softmodem.protocol.analog.v8
 import softmodem.protocol.bit.uart
 import softmodem.protocol.byte.v250
@@ -200,7 +201,16 @@ class Modem(softmodem.IModem, softmodem.IByteSender):
             if call is None:
                 return
 
-        if configuration.v21_enabled:
+        if configuration.v22_enabled:
+            self._data_session.analog_protocol = (
+                softmodem.protocol.analog.v22bis.V22bis(
+                    self._data_session.bit_protocol,
+                    call.direction,
+                    self._connect_callback
+                )
+            )
+
+        elif configuration.v21_enabled:
             self._data_session.analog_protocol = (
                 softmodem.protocol.analog.v21.V21(
                     self._data_session.bit_protocol,
