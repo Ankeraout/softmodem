@@ -86,6 +86,8 @@ class V22bisReceiver(softmodem.IAnalogReceiver):
         self._costas.slicer = slicer
         self._muller.slicer = slicer
         self._speed = value
+        self._agc.auto_update = value == 1200
+        self._agc._alpha = 0.0001 if value == 1200 else 0.06
 
     def get_transition_rate(self) -> float:
         return self._transition_counter.get_transition_count() / (2400 * 0.27)
@@ -127,10 +129,17 @@ class V22bisReceiver(softmodem.IAnalogReceiver):
                 if self._speed == 2400:
                     last_dibit = V22bisReceiver._get_last_dibit(
                         symbol_quadrant,
-                        symbol * 2 / 3
+                        symbol
                     )
 
                     bits += last_dibit
+
+                    expected_symbol = complex(
+                        2 ** 0.5 / (2 if last_dibit[1] == 1 else 6),
+                        2 ** 0.5 / (2 if last_dibit[0] == 1 else 6)
+                    )
+
+                    self._agc.update(symbol, expected_symbol)
                 
                 if self.enable_transition_counter:
                     self._transition_counter.receive_bits(bits)
@@ -297,7 +306,8 @@ class V22bis(softmodem.IAnalogProtocol):
         CALLER_SENDING_SCRAMBLED_1_2400 = enum.auto()
         CALLER_WAITING_SCRAMBLED_1_2400 = enum.auto()
         CALLEE_SENDING_UNSCRAMBLED_1 = enum.auto()
-        DATA = enum.auto()
+        DATA_1200 = enum.auto()
+        DATA_2400 = enum.auto()
 
     class _PatternBitReceiver(softmodem.IBitReceiver):
         def __init__(
@@ -468,6 +478,7 @@ class V22bis(softmodem.IAnalogProtocol):
                 if self._timer <= 0:
                     print("[V22bis] Waiting for scrambled 1 at 2400 bps.")
                     self._change_state(V22bis._State.CALLER_WAITING_SCRAMBLED_1_2400)
+                    self._timer = 2
                 
             case V22bis._State.CALLER_WAITING_SCRAMBLED_1_2400:
                 self._receiver.receive_samples(samples)
@@ -481,7 +492,12 @@ class V22bis(softmodem.IAnalogProtocol):
                     if self._connect_callback is not None:
                         self._connect_callback(2400, 2400)
 
-                    self._change_state(V22bis._State.DATA)
+                    self._change_state(V22bis._State.DATA_2400)
+
+                elif self._timer <= 0:
+                    print("[V22bis] Connection failed, retrying...")
+                    self._change_state(V22bis._State.CALLER_SENDING_UNSCRAMBLED_0011)
+                    self._timer = 0.1
 
                 else:
                     print("\r[V22bis]", self._pattern_receiver_1.count, self._pattern_receiver_1.best, self._receiver.get_transition_rate(), end="    ")
@@ -495,9 +511,12 @@ class V22bis(softmodem.IAnalogProtocol):
                     if self._connect_callback is not None:
                         self._connect_callback(1200, 1200)
 
-                    self._change_state(V22bis._State.DATA)
+                    self._change_state(V22bis._State.DATA_1200)
 
-            case V22bis._State.DATA:
+            case V22bis._State.DATA_1200:
+                self._receiver.receive_samples(samples)
+
+            case V22bis._State.DATA_2400:
                 self._receiver.receive_samples(samples)
 
             case V22bis._State.CALLEE_SENDING_UNSCRAMBLED_1:
@@ -512,7 +531,8 @@ class V22bis(softmodem.IAnalogProtocol):
             V22bis._State.CALLER_RECEIVE_2400,
             V22bis._State.CALLER_SENDING_SCRAMBLED_1_2400,
             V22bis._State.CALLER_WAITING_SCRAMBLED_1_2400,
-            V22bis._State.DATA
+            V22bis._State.DATA_1200,
+            V22bis._State.DATA_2400
         ):
             return self._sender.get_samples(n)
         
@@ -574,5 +594,9 @@ class V22bis(softmodem.IAnalogProtocol):
                 self._receiver.bit_receiver = self._handshake_bit_receiver
                 self._receiver.enable_transition_counter = True
                 self._sender.bit_provider = self._pattern_provider_1
+
+            case V22bis._State.DATA_1200:
+                self._receiver.speed = 1200
+                self._sender._speed = 1200
 
         self._state = state

@@ -116,6 +116,7 @@ class Modem(softmodem.IModem, softmodem.IByteSender):
                 # Call did not connect
                 self._call = None
                 print("[Modem] Call did not connect.")
+                self._byte_receiver.receive_bytes(b"\r\nNO DIALTONE\r\n")
                 return
             
             elif call.state == softmodem.CallState.CONNECTED:
@@ -225,7 +226,7 @@ class Modem(softmodem.IModem, softmodem.IByteSender):
         uplink_speed: int
     ) -> None:
         self._byte_receiver.receive_bytes(
-            "CONNECT {:d}/{:d}\r\n".format(
+            "\r\nCONNECT {:d}/{:d}\r\n".format(
                 downlink_speed,
                 uplink_speed
             ).encode()
