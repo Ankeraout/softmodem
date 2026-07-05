@@ -16,6 +16,8 @@ class Configuration:
     record: bool
     enable_v21: bool
     enable_v22: bool
+    enable_v32: bool
+    enable_v42: bool
 
 class Application:
     def __init__(self) -> None:
@@ -64,7 +66,9 @@ class Application:
             sip["password"],
             modem["record"],
             modem["enable_v21"],
-            modem["enable_v22"]
+            modem["enable_v22"],
+            modem["enable_v32"],
+            modem["enable_v42"]
         )
 
     def run(self) -> None:
@@ -140,7 +144,9 @@ class Application:
             byte_receiver,
             self._configuration.record,
             self._configuration.enable_v21,
-            self._configuration.enable_v22
+            self._configuration.enable_v22,
+            self._configuration.enable_v32,
+            self._configuration.enable_v42
         )
 
         while not self._stop_request:

@@ -18,7 +18,9 @@ class Modem(softmodem.IModem, softmodem.IByteSender):
         byte_receiver: softmodem.IByteReceiver,
         record: bool,
         enable_v21: bool,
-        enable_v22: bool
+        enable_v22: bool,
+        enable_v32: bool,
+        enable_v42: bool
     ) -> None:
         self._phone = phone
         self._lock = threading.RLock()
@@ -36,6 +38,8 @@ class Modem(softmodem.IModem, softmodem.IByteSender):
         self._record = record
         self._enable_v21 = enable_v21
         self._enable_v22 = enable_v22
+        self._enable_v32 = enable_v32
+        self._enable_v42 = enable_v42
     
     @property
     def state(self):
@@ -127,8 +131,10 @@ class Modem(softmodem.IModem, softmodem.IByteSender):
             time.sleep(0.1)
 
         configuration = softmodem.protocol.analog.v8.Configuration(
-            self._enable_v21,
-            self._enable_v22
+            v21_enabled=self._enable_v21,
+            v22_enabled=self._enable_v22,
+            v32_enabled=self._enable_v32,
+            v42_enabled=self._enable_v42
         )
 
         self._data_session.analog_protocol = (

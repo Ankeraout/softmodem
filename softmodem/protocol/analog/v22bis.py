@@ -478,7 +478,7 @@ class V22bis(softmodem.IAnalogProtocol):
                 if self._timer <= 0:
                     print("[V22bis] Waiting for scrambled 1 at 2400 bps.")
                     self._change_state(V22bis._State.CALLER_WAITING_SCRAMBLED_1_2400)
-                    self._timer = 2
+                    self._timer = 5
                 
             case V22bis._State.CALLER_WAITING_SCRAMBLED_1_2400:
                 self._receiver.receive_samples(samples)

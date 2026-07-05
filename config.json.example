@@ -2,7 +2,9 @@
     "modem": {
         "record": true,
         "enable_v21": true,
-        "enable_v22": true
+        "enable_v22": true,
+        "enable_v32": true,
+        "enable_v42": false
     },
     "sip": {
         "server": "sip.mysipprovider.com",

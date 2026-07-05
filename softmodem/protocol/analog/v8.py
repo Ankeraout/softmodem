@@ -12,12 +12,15 @@ import typing
 class Configuration:
     v21_enabled: bool = False
     v22_enabled: bool = False
+    v32_enabled: bool = False
     v42_enabled: bool = False
 
     def __and__(self, other: "Configuration") -> "Configuration":
         return Configuration(
             self.v21_enabled & other.v21_enabled,
-            self.v22_enabled & other.v22_enabled
+            self.v22_enabled & other.v22_enabled,
+            self.v32_enabled & other.v32_enabled,
+            self.v42_enabled & other.v42_enabled
         )
 
 class V8(softmodem.IAnalogProtocol):
@@ -269,8 +272,11 @@ class V8(softmodem.IAnalogProtocol):
         
         if configuration.v22_enabled:
             modn1 |= 0x02
+
+        if configuration.v32_enabled:
+            modn1 |= 0x01
         
-        message_bytes = [0xe0, 0xc1, 0x05, modn1, modn2, 0x0d]
+        message_bytes = [0xe0, 0xc1, 0x05, modn1, modn2, 0x0d, 0x07]
 
         if configuration.v42_enabled:
             message_bytes.append(0x2a)
@@ -294,6 +300,7 @@ class V8(softmodem.IAnalogProtocol):
         modn1 = message[modulation_start_index + 1]
         modn2 = message[modulation_start_index + 2]
 
+        configuration.v32_enabled = (modn1 & 0x01) != 0
         configuration.v22_enabled = (modn1 & 0x02) != 0
         configuration.v21_enabled = (modn2 & 0x80) != 0
         configuration.v42_enabled = b"\x2a" in message
