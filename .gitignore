@@ -1,3 +1,5 @@
 .vscode
 config.json
 record
+bin
+obj
