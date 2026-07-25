@@ -1,7 +1,15 @@
+ifeq ($(OS),Windows_NT)
+	EXECUTABLE=bin/softmodem.exe
+	PLATFORM=WIN32
+else
+	EXECUTABLE=bin/softmodem
+	PLATFORM=UNIX
+endif
+
 CC=gcc
-CFLAGS=-c -std=gnu99 -W -Wall -Wextra -pedantic -MMD -MP -g3 -Og -Iinclude
+CFLAGS=-c -std=gnu99 -W -Wall -Wextra -pedantic -MMD -MP -g3 -Og -Iinclude -DPLATFORM_$(PLATFORM)
 CXX=g++
-CXXFLAGS=-c -std=gnu++11 -W -Wall -Wextra -pedantic -MMD -MP -g3 -Og -Iinclude
+CXXFLAGS=-c -std=gnu++11 -W -Wall -Wextra -pedantic -MMD -MP -g3 -Og -Iinclude -DPLATFORM_$(PLATFORM)
 LD=gcc
 LDFLAGS=
 SOURCES_C=$(shell find src -name '*.c')
@@ -14,12 +22,6 @@ DEPENDENCIES_CPP=$(OBJECTS_CPP:obj/%.cpp.o=obj/%.cpp.d)
 DEPENDENCIES=$(DEPENDENCIES_C) $(DEPENDENCIES_CPP)
 MKDIR=mkdir -p
 RM=rm -rf
-
-ifeq ($(OS),Windows_NT)
-	EXECUTABLE=bin/softmodem.exe
-else
-	EXECUTABLE=bin/softmodem
-endif
 
 all: $(EXECUTABLE)
 
